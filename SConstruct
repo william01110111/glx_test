@@ -1,0 +1,1 @@
+Program(target = 'bin', source = Split('main.cpp'), LIBS = Split('X11 GL GLU'))
