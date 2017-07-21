@@ -1,178 +1,108 @@
-#include "TexRenderer.h"
-
-#include<stdio.h>
-#include<stdlib.h>
-#include<X11/X.h>
-#include<X11/Xlib.h>
-#include<GL/gl.h>
-#include<GL/glx.h>
-#include<GL/glu.h>
-
-Display                 *dpy;
-Window                  root;
-GLint                   att[] = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
-XVisualInfo             *vi;
-Colormap                cmap;
-XSetWindowAttributes    swa;
-Window                  win;
-GLXContext              glc;
-XWindowAttributes       gwa;
-XEvent                  xev;
-
-void DrawAQuad() {
-	glClearColor(1.0, 1.0, 1.0, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(-1., 1., -1., 1., 1., 20.);
-
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	gluLookAt(0., 0., 10., 0., 0., 0., 0., 1., 0.);
-
-	glBegin(GL_QUADS);
-	glColor3f(1., 0., 0.); glVertex3f(-.75, -.75, 0.);
-	glColor3f(0., 1., 0.); glVertex3f( .75, -.75, 0.);
-	glColor3f(0., 0., 1.); glVertex3f( .75,  .75, 0.);
-	glColor3f(1., 1., 0.); glVertex3f(-.75,  .75, 0.);
-	glEnd();
-} 
-
-GLXContext createContext(Display * display, XVisualInfo * xVisualInfo)
+#include <GL/glx.h>
+#include <GL/gl.h>
+#include <unistd.h>
+#include <iostream>
+ 
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+ 
+#define GLX_CONTEXT_MAJOR_VERSION_ARB       0x2091
+#define GLX_CONTEXT_MINOR_VERSION_ARB       0x2092
+typedef GLXContext (*glXCreateContextAttribsARBProc)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
+ 
+int main (int argc, char ** argv)
 {
-  glXCreateContextAttribsARBProc glXCreateContextAttribsARB = 0;
-  glXCreateContextAttribsARB = (glXCreateContextAttribsARBProc) glXGetProcAddressARB( (const GLubyte *) "glXCreateContextAttribsARB" );
-
-  GLXContext ctx = 0;
-  
-  if ( !isExtensionSupported( glxExts, "GLX_ARB_create_context" ) || !glXCreateContextAttribsARB )
-  {
-    printf( "glXCreateContextAttribsARB() not found"
-            " ... you're fucked\n" );
-    exit(1);
-  }
-  
-    int context_attribs[] =
-      {
+    Display *display = XOpenDisplay(0);
+ 
+    glXCreateContextAttribsARBProc glXCreateContextAttribsARB = NULL;
+ 
+    const char *extensions = glXQueryExtensionsString(display, DefaultScreen(display));
+    std::cout << extensions << std::endl;
+ 
+    static int visual_attribs[] =
+    {
+        GLX_RENDER_TYPE, GLX_RGBA_BIT,
+        GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
+        GLX_DOUBLEBUFFER, true,
+        GLX_RED_SIZE, 1,
+        GLX_GREEN_SIZE, 1,
+        GLX_BLUE_SIZE, 1,
+        None
+     };
+ 
+    std::cout << "Getting framebuffer config" << std::endl;
+    int fbcount;
+    GLXFBConfig *fbc = glXChooseFBConfig(display, DefaultScreen(display), visual_attribs, &fbcount);
+    if (!fbc)
+    {
+        std::cout << "Failed to retrieve a framebuffer config" << std::endl;
+        return 1;
+    }
+ 
+    std::cout << "Getting XVisualInfo" << std::endl;
+    XVisualInfo *vi = glXGetVisualFromFBConfig(display, fbc[0]);
+ 
+    XSetWindowAttributes swa;
+    std::cout << "Creating colormap" << std::endl;
+    swa.colormap = XCreateColormap(display, RootWindow(display, vi->screen), vi->visual, AllocNone);
+    swa.border_pixel = 0;
+    swa.event_mask = StructureNotifyMask;
+ 
+    std::cout << "Creating window" << std::endl;
+    Window win = XCreateWin	dow(display, RootWindow(display, vi->screen), 0, 0, 100, 100, 0, vi->depth, InputOutput, vi->visual, CWBorderPixel|CWColormap|CWEventMask, &swa);
+    if (!win)
+    {
+        std::cout << "Failed to create window." << std::endl;
+        return 1;
+    }
+ 
+    std::cout << "Mapping window" << std::endl;
+    XMapWindow(display, win);
+ 
+    // Create an oldstyle context first, to get the correct function pointer for glXCreateContextAttribsARB
+    GLXContext ctx_old = glXCreateContext(display, vi, 0, GL_TRUE);
+    glXCreateContextAttribsARB =  (glXCreateContextAttribsARBProc)glXGetProcAddress((const GLubyte*)"glXCreateContextAttribsARB");
+    glXMakeCurrent(display, 0, 0);
+    glXDestroyContext(display, ctx_old);
+ 
+    if (glXCreateContextAttribsARB == NULL)
+    {
+        std::cout << "glXCreateContextAttribsARB entry point not found. Aborting." << std::endl;
+        return false;
+    }
+ 
+    static int context_attribs[] =
+    {
         GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
         GLX_CONTEXT_MINOR_VERSION_ARB, 0,
-        //GLX_CONTEXT_FLAGS_ARB        , GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
         None
-      };
-
-    printf( "Creating context\n" );
-    ctx = glXCreateContextAttribsARB( display, bestFbc, 0,
-                                      True, context_attribs );
-
-    // Sync to ensure any errors generated are processed.
-    XSync( display, False );
-    if ( !ctxErrorOccurred && ctx )
-      printf( "Created GL 3.0 context\n" );
-    else
-    {
-      // Couldn't create GL 3.0 context.  Fall back to old-style 2.x context.
-      // When a context version below 3.0 is requested, implementations will
-      // return the newest context version compatible with OpenGL versions less
-      // than version 3.0.
-      // GLX_CONTEXT_MAJOR_VERSION_ARB = 1
-      context_attribs[1] = 1;
-      // GLX_CONTEXT_MINOR_VERSION_ARB = 0
-      context_attribs[3] = 0;
-
-      ctxErrorOccurred = false;
-
-      printf( "Failed to create GL 3.0 context"
-              " ... using old-style GLX context\n" );
-      ctx = glXCreateContextAttribsARB( display, xVisualInfo, 0, 
-                                        True, context_attribs );
-    }
-
-  // Sync to ensure any errors generated are processed.
-  XSync( display, False );
-
-  // Restore the original error handler
-  XSetErrorHandler( oldHandler );
-
-  if ( ctxErrorOccurred || !ctx )
-  {
-    printf( "Failed to create an OpenGL context\n" );
-    exit(1);
-  }
-}
-
-int main(int argc, char *argv[]) {
-	
-	printf("%d\n", GLX_CONTEXT_MAJOR_VERSION_ARB);
-	
-	auto renderer = TexRenderer();
-	
-	dpy = XOpenDisplay(NULL);
-	
-	if(dpy == NULL) {
-		printf("\n\tcannot connect to X server\n\n");
-		exit(0);
-	}
-	
-	root = DefaultRootWindow(dpy);
-	
-	vi = glXChooseVisual(dpy, 0, att);
-	
-	if(vi == NULL) {
-		printf("\n\tno appropriate visual found\n\n");
-		exit(0);
-	} 
-	else {
-		printf("\n\tvisual %p selected\n", (void *)vi->visualid); /* %p creates hexadecimal output like in glxinfo */
-	}
-	
-	cmap = XCreateColormap(dpy, root, vi->visual, AllocNone);
-	
-	swa.colormap = cmap;
-	swa.event_mask = ExposureMask | KeyPressMask;
-	
-	win = XCreateWindow(dpy, root, 0, 0, 600, 600, 0, vi->depth, InputOutput, vi->visual, CWColormap | CWEventMask, &swa);
-	
-	XMapWindow(dpy, win);
-	XStoreName(dpy, win, "VERY SIMPLE APPLICATION");
-	
-	int context_attribs[] = {
-        GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
-        GLX_CONTEXT_MINOR_VERSION_ARB, 3,
-        GLX_CONTEXT_FLAGS_ARB, 0,
-        //GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
-        //None
     };
-	
-	//glc = glXCreateContext(dpy, vi, NULL, GL_TRUE);
-	//glc = glXCreateContextAttribsARB(dpy, vi, NULL, GL_TRUE, context_attribs);
-	
-	glc = createContext(dpy, vi);
-	
-	glXMakeCurrent(dpy, win, glc);
-	
-	glEnable(GL_DEPTH_TEST); 
-	
-	renderer.setup(200, 200);
-	
-	while(1) {
-        XNextEvent(dpy, &xev);
-        
-        if(xev.type == Expose) {
-                XGetWindowAttributes(dpy, win, &gwa);
-                //renderer.setup(gwa.width, gwa.height);
-                renderer.draw();
-                //glViewport(0, 0, gwa.width, gwa.height);
-                //DrawAQuad(); 
-                glXSwapBuffers(dpy, win);
-        }
-                
-        else if(xev.type == KeyPress) {
-                glXMakeCurrent(dpy, None, NULL);
-                glXDestroyContext(dpy, glc);
-                XDestroyWindow(dpy, win);
-                XCloseDisplay(dpy);
-                exit(0);
-        }
-    } /* this closes while(1) { */
-} /* this is the } which closes int main(int argc, char *argv[]) { */
+ 
+    std::cout << "Creating context" << std::endl;
+    GLXContext ctx = glXCreateContextAttribsARB(display, fbc[0], NULL, true, context_attribs);
+    if (!ctx)
+    {
+        std::cout << "Failed to create GL3 context." << std::endl;
+        return 1;
+    }
+ 
+    std::cout << "Making context current" << std::endl;
+    glXMakeCurrent(display, win, ctx);
+ 
+        glClearColor (0, 0.5, 1, 1);
+        glClear (GL_COLOR_BUFFER_BIT);
+        glXSwapBuffers (display, win);
+ 
+        sleep(1);
+ 
+        glClearColor (1, 0.5, 0, 1);
+        glClear (GL_COLOR_BUFFER_BIT);
+        glXSwapBuffers (display, win);
+ 
+        sleep(1);
+ 
+    ctx = glXGetCurrentContext();
+    glXMakeCurrent(display, 0, 0);
+    glXDestroyContext(display, ctx);
+}
