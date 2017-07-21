@@ -44,7 +44,7 @@ GLXContextManager::GLXContextManager()
     swa.event_mask = StructureNotifyMask;
  
     std::cout << "Creating window" << std::endl;
-    Window win = XCreateWindow(display, RootWindow(display, vi->screen), 0, 0, 100, 100, 0, vi->depth, InputOutput, vi->visual, CWBorderPixel|CWColormap|CWEventMask, &swa);
+    win = XCreateWindow(display, RootWindow(display, vi->screen), 0, 0, 100, 100, 0, vi->depth, InputOutput, vi->visual, CWBorderPixel|CWColormap|CWEventMask, &swa);
     if (!win)
     {
         std::cout << "Failed to create window." << std::endl;
@@ -69,7 +69,7 @@ GLXContextManager::GLXContextManager()
     static int context_attribs[] =
     {
         GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
-        GLX_CONTEXT_MINOR_VERSION_ARB, 0,
+        GLX_CONTEXT_MINOR_VERSION_ARB, 3,
         None
     };
  
@@ -85,8 +85,14 @@ GLXContextManager::GLXContextManager()
     glXMakeCurrent(display, win, ctx);
 }
 
+void GLXContextManager::swapBuffer()
+{
+	glXSwapBuffers(display, win);
+}
+
 GLXContextManager::~GLXContextManager()
 {
+	std::cout << "cleaning up context..." << std::endl;
 	ctx = glXGetCurrentContext();
     glXMakeCurrent(display, 0, 0);
     glXDestroyContext(display, ctx);

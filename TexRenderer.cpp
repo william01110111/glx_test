@@ -75,7 +75,7 @@ void TexRenderer::setupTexture()
 
 	// Load and generate the texture
 	int width, height;
-	unsigned char* image = SOIL_load_image("/home/william/c++/GLFW_test/orange.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+	unsigned char* image = SOIL_load_image("orange.jpg", &width, &height, 0, SOIL_LOAD_RGB);
 	if (!image)
 	{
 		cout << "image loading error: " << SOIL_last_result() << endl;

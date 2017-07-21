@@ -9,8 +9,11 @@ class GLXContextManager
 	GLXContextManager();
 	~GLXContextManager();
 	
-	private:
+	void swapBuffer();
+	
+	//private:
 	Display * display = nullptr;
 	GLXContext ctx;
+	Window win;
 };
 

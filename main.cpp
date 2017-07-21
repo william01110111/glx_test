@@ -5,11 +5,22 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "TexRenderer.h"
 #include "GLXContextManager.h"
 
 int main (int argc, char ** argv)
 {
-    GLXContextManager manager;
+    auto manager = GLXContextManager();
+    
+    auto renderer = TexRenderer();
+    
+    renderer.setup(100, 100);
+    
+    renderer.draw();
+    
+    manager.swapBuffer();
+    
+    sleep(4);
     
 	/*
 	glClearColor (0, 0.5, 1, 1);
