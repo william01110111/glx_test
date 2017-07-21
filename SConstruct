@@ -4,6 +4,7 @@ cpp_source_files = [
 	'ShaderProgram.cpp',
 	'utils.cpp',
 	'TexRenderer.cpp',
+	'GLXContextManager.cpp',
 ]
 
 libs = [
