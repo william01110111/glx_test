@@ -3,6 +3,7 @@ cpp_source_files = [
 	'Image.cpp',
 	'ShaderProgram.cpp',
 	'utils.cpp',
+	'TexRenderer.cpp',
 ]
 
 libs = [
