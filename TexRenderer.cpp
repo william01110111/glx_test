@@ -4,7 +4,10 @@
 
 void TexRenderer::setup(int width, int height)
 {
-	shaderProgram=ShaderProgram("shader0.vert", "shader0.frag", false);
+	glewInit();
+	cout << 1 << endl;
+	shaderProgram=ShaderProgram("shader0.vert", "shader0.frag", true);
+	cout << 2 << endl;
 	
 	GLuint VBO, EBO;
 	
@@ -56,7 +59,7 @@ void TexRenderer::setup(int width, int height)
 	//glDeleteBuffers(1, &VBO);
 	//glDeleteBuffers(1, &EBO);
 	
-	setupTexture();
+	setupTexture();	
 }
 
 void TexRenderer::setupTexture()

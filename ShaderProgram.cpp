@@ -2,8 +2,11 @@
 
 ShaderProgram::ShaderProgram(string vertFile, string fragFile, bool debug)
 {
+	cout << "1.1" << endl;
 	Shader vertShader(vertFile, GL_VERTEX_SHADER, debug);
+	cout << "1.2" << endl;
 	Shader fragShader(fragFile, GL_FRAGMENT_SHADER, debug);
+	cout << "1.3" << endl;
 	
     data = glCreateProgram();
     glAttachShader(data, vertShader);
@@ -32,21 +35,27 @@ ShaderProgram::~ShaderProgram()
 
 ShaderProgram::Shader::Shader(string file, GLenum type, bool debug)
 {
+	cout << "1.1.1" << endl;
 	string sourceString;
 	if (!loadFile(file, sourceString, debug))
 		cout << "vertex shader file failed to load" << endl;
+	cout << "1.1.2" << endl;
 	const char* source=sourceString.c_str();
-	
+	cout << "1.1.3" << endl;
     data = glCreateShader(type);
+	cout << "1.1.4" << endl;
     glShaderSource(data, 1, &source, NULL);
+	cout << "1.1.5" << endl;
     glCompileShader(data);
+	cout << "1.1.6" << endl;
     // Check for compile time errors
     GLint success;
     glGetShaderiv(data, GL_COMPILE_STATUS, &success);
     if (!success)
     {
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << getInfoLog() << std::endl;
+        std::cerr << "shader error: " << file << " " << getInfoLog() << std::endl;
     }
+	cout << "1.1.10" << endl;
 }
 
 string ShaderProgram::Shader::getInfoLog()
