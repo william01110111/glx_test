@@ -20,7 +20,7 @@ int main (int argc, char ** argv)
     
     manager.swapBuffer();
     
-    sleep(100);
+    sleep(4);
     
 	/*
 	glClearColor (0, 0.5, 1, 1);
