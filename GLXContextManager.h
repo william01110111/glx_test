@@ -6,7 +6,7 @@
 class GLXContextManager
 {
 	public:
-	GLXContextManager();
+	GLXContextManager(int width, int height);
 	~GLXContextManager();
 	
 	void swapBuffer();

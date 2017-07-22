@@ -12,7 +12,7 @@ public:
 	void setup(int width, int height);
 	void draw();
 	
-	float blurRds=0.01;
+	float blurRds=0;
 	
 private:
 	

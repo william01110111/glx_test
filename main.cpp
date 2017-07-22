@@ -10,17 +10,17 @@
 
 int main (int argc, char ** argv)
 {
-    auto manager = GLXContextManager();
+    auto manager = GLXContextManager(600, 600);
     
     auto renderer = TexRenderer();
     
-    renderer.setup(100, 100);
+    renderer.setup(600, 600);
     
     renderer.draw();
     
     manager.swapBuffer();
     
-    sleep(4);
+    sleep(100);
     
 	/*
 	glClearColor (0, 0.5, 1, 1);

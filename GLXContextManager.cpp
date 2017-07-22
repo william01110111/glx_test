@@ -5,7 +5,7 @@
 
 typedef GLXContext (*glXCreateContextAttribsARBProc)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
 
-GLXContextManager::GLXContextManager()
+GLXContextManager::GLXContextManager(int width, int height)
 {
 	display = XOpenDisplay(0);
  
@@ -42,9 +42,12 @@ GLXContextManager::GLXContextManager()
     swa.colormap = XCreateColormap(display, RootWindow(display, vi->screen), vi->visual, AllocNone);
     swa.border_pixel = 0;
     swa.event_mask = StructureNotifyMask;
- 
+	
+	int x = 0;
+	int y = 0;
+	
     std::cout << "Creating window" << std::endl;
-    win = XCreateWindow(display, RootWindow(display, vi->screen), 0, 0, 100, 100, 0, vi->depth, InputOutput, vi->visual, CWBorderPixel|CWColormap|CWEventMask, &swa);
+    win = XCreateWindow(display, RootWindow(display, vi->screen), x, y, width, height, 0, vi->depth, InputOutput, vi->visual, CWBorderPixel|CWColormap|CWEventMask, &swa);
     if (!win)
     {
         std::cout << "Failed to create window." << std::endl;

@@ -5,9 +5,7 @@
 void TexRenderer::setup(int width, int height)
 {
 	glewInit();
-	cout << 1 << endl;
 	shaderProgram=ShaderProgram("shader0.vert", "shader0.frag", true);
-	cout << 2 << endl;
 	
 	GLuint VBO, EBO;
 	
@@ -25,7 +23,7 @@ void TexRenderer::setup(int width, int height)
 		1, 2, 3   // Second Triangle
 	};
 	
-	glViewport(0, 0, width, height);
+	//glViewport(0, 0, width, height);
 	
 	glGenVertexArrays(1, &squareVAO);
 	glGenBuffers(1, &VBO);
@@ -89,8 +87,8 @@ void TexRenderer::setupTexture()
 
 void TexRenderer::draw()
 {
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
+	//glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	//glClear(GL_COLOR_BUFFER_BIT);
 	
 	cout << blurRds << endl;
 	
